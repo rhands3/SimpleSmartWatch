@@ -46,3 +46,4 @@ a Simple Smart Watch
  -  5 OLED切换菜单速度太慢，准备采用DMA+双缓冲的策略。重写OLED.c，首先OLED.send加入中断发送,另外设置信号量,加入缓冲数组和数组指针,在oledshowframe函数中进行交换sned发送的数组，因为采用OLED，DMA分页发送，硬件CH1116限制原因无法自增地址只能1页1页发送，每次发送触发中断回调时释放信号量。此时闪屏
  -  6 发现是各DMA数据被抢占，添加busy标志，删除信号量，在frame出设置busy为1代表此时dma传输中，在oledshow中若busy为1则阻塞，在中断回调中运输完毕busy为0.此时黑屏，发现1是清屏必须阻塞清屏，因为分页发送，实际上send没用了，在show里完成所有功能，并且show只发送一页，剩下的在中断中发送。
  -  7 定义两个指针current和display_start实现滑动窗口，current控制折线框移动，displaystart控制菜单移动，只有current到达边缘时，displaystart才会刷新，在时间页面跳过，因为时间不参与折线画画
+ -  8 优化菜单切换动画。原 Menu_Switch 函数在外部手动切换 current 后调用，方向计算及窗口同步失效。最终拆分为 Menu_switch_Left / Right，由调用侧明确指定滑入方向，内部原子化完成 current 切换 + 动画启动。修复 display.c 动画分支中括号导致的绘制遗漏，时间页面切换动画接入完成。
